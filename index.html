@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scientific JS Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+        
+        <div class="bg-gray-900 p-6 text-right relative">
+            <div class="absolute top-4 left-4 text-gray-600 text-xs font-bold tracking-widest">SCIENTIFIC JS</div>
+            
+            <div id="display-history" class="text-gray-400 text-sm h-6 font-mono overflow-hidden mt-4">
+                </div>
+            
+            <div id="display-current" class="text-white text-5xl font-bold font-mono overflow-x-auto scrollbar-hide whitespace-nowrap">
+                0
+            </div>
+        </div>
+
+        <div class="p-4 bg-gray-50">
+            <div class="grid grid-cols-4 gap-3">
+                
+                <button class="p-3 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-gray-700" data-type="memory" data-value="MC">MC</button>
+                <button class="p-3 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-gray-700" data-type="memory" data-value="MR">MR</button>
+                <button class="p-3 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-gray-700" data-type="memory" data-value="M+">M+</button>
+                <button class="p-3 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-gray-700" data-type="memory" data-value="M-">M-</button>
+
+                <button class="p-4 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg font-bold" data-type="action" data-value="CE">CE</button>
+                <button class="p-4 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg font-bold" data-type="action" data-value="C">C</button>
+                <button class="p-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-bold" data-type="action" data-value="DEL">⌫</button>
+                <button class="p-4 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 rounded-lg font-bold text-xl" data-type="operator" data-value="/">÷</button>
+
+                <button class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg font-bold text-xl text-gray-700 shadow-sm" data-type="number" data-value="7">7</button>
+                <button class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg font-bold text-xl text-gray-700 shadow-sm" data-type="number" data-value="8">8</button>
+                <button class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg font-bold text-xl text-gray-700 shadow-sm" data-type="number" data-value="9">9</button>
+                <button class="p-4 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 rounded-lg font-bold text-xl" data-type="operator" data-value="*">×</button>
+
+                <button class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg font-bold text-xl text-gray-700 shadow-sm" data-type="number" data-value="4">4</button>
+                <button class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg font-bold text-xl text-gray-700 shadow-sm" data-type="number" data-value="5">5</button>
+                <button class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg font-bold text-xl text-gray-700 shadow-sm" data-type="number" data-value="6">6</button>
+                <button class="p-4 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 rounded-lg font-bold text-xl" data-type="operator" data-value="-">-</button>
+
+                <button class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg font-bold text-xl text-gray-700 shadow-sm" data-type="number" data-value="1">1</button>
+                <button class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg font-bold text-xl text-gray-700 shadow-sm" data-type="number" data-value="2">2</button>
+                <button class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg font-bold text-xl text-gray-700 shadow-sm" data-type="number" data-value="3">3</button>
+                <button class="p-4 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 rounded-lg font-bold text-xl" data-type="operator" data-value="+">+</button>
+
+                <button class="col-span-2 p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg font-bold text-xl text-gray-700 shadow-sm" data-type="number" data-value="0">0</button>
+                <button class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg font-bold text-xl text-gray-700 shadow-sm" data-type="number" data-value=".">.</button>
+                <button class="p-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold text-xl shadow-lg" data-type="action" data-value="=">=</button>
+            </div>
+        </div>
+
+        <div class="border-t border-gray-200 bg-white p-4">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-xs font-bold text-gray-500 uppercase">Riwayat (Terakhir 5)</h3>
+                <button id="clear-history" class="text-xs text-red-500 hover:text-red-700">Hapus Semua</button>
+            </div>
+            <ul id="history-list" class="text-sm text-gray-600 space-y-2 h-32 overflow-y-auto scrollbar-hide">
+                <li class="text-center text-gray-400 italic text-xs mt-10">Belum ada perhitungan</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        console.log("Scientific JS Calculator siap digunakan!");
+    </script>
+</body>
+</html>
