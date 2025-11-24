@@ -89,8 +89,88 @@
         </div>
     </div>
     
-    <script>
-        console.log("Layout Fixed!");
+  <script>
+        let currentInput = '0';
+        let resultDisplayed = false;
+
+        const displayCurrent = document.getElementById('display-current');
+        const displayHistory = document.getElementById('display-history');
+
+        function updateScreen() {
+            let rawDisplay = currentInput
+                .replace(/\*/g, '×')
+                .replace(/\//g, '÷');
+            
+            displayCurrent.innerText = rawDisplay;
+        }
+
+        function calculate() {
+            try {
+                const result = new Function('return ' + currentInput)();
+                const finalResult = parseFloat(result.toFixed(8));
+
+                currentInput = finalResult.toString();
+                displayHistory.innerText = "Hasil Akhir"; 
+                resultDisplayed = true;
+                updateScreen();
+            } catch (e) {
+                alert("Format rumus salah!");
+                currentInput = '0';
+                updateScreen();
+            }
+        }
+
+        function handleInput(type, value) {
+            if (type === 'number') {
+                if (currentInput === '0' || resultDisplayed) {
+                    currentInput = value;
+                    resultDisplayed = false;
+                } else {
+                    currentInput += value;
+                }
+            } 
+            else if (type === 'operator') {
+                resultDisplayed = false; 
+                const lastChar = currentInput.slice(-1);
+                if (['+', '-', '*', '/'].includes(lastChar)) {
+                    currentInput = currentInput.slice(0, -1) + value;
+                } else {
+                    currentInput += value;
+                }
+            } 
+            else if (type === 'action') {
+                if (value === 'C') {
+                    currentInput = '0';
+                    displayHistory.innerText = '';
+                }
+                if (value === 'CE' || value === 'DEL') {
+                    currentInput = currentInput.toString().slice(0, -1);
+                    if (currentInput === '') currentInput = '0';
+                }
+                if (value === '=') calculate();
+            }
+            
+            updateScreen();
+        }
+
+        document.querySelector('.grid').addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            const type = btn.dataset.type;
+            const value = btn.dataset.value;
+            if (type && value) handleInput(type, value);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key >= '0' && e.key <= '9') handleInput('number', e.key);
+            if (e.key === '.') handleInput('number', '.');
+            if (['+', '-', '*', '/'].includes(e.key)) handleInput('operator', e.key);
+            if (e.key === 'Enter' || e.key === '=') handleInput('action', '=');
+            if (e.key === 'Backspace') handleInput('action', 'DEL');
+            if (e.key === 'Escape') handleInput('action', 'C');
+        });
+
+        updateScreen();
     </script>
 </body>
 </html>
