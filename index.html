@@ -88,26 +88,44 @@
 
         </div>
     </div>
-    
-  <script>
+
+    <script>
         let currentInput = '0';
+        let history = []; 
         let resultDisplayed = false;
+        let memoryValue = 0; 
 
         const displayCurrent = document.getElementById('display-current');
         const displayHistory = document.getElementById('display-history');
+        const historyList = document.getElementById('history-list');
+        const clearHistoryBtn = document.getElementById('clear-history-btn');
+        const memoryDisplay = document.getElementById('memory-display');
+        const memoryStatus = document.getElementById('memory-status');
 
         function updateScreen() {
-            let rawDisplay = currentInput
-                .replace(/\*/g, '×')
-                .replace(/\//g, '÷');
+            let rawDisplay = currentInput.replace(/\*/g, '×').replace(/\//g, '÷');
+            displayCurrent.innerText = rawDisplay; 
             
-            displayCurrent.innerText = rawDisplay;
+            memoryDisplay.innerText = memoryValue;
+            if (memoryValue !== 0) {
+                memoryStatus.innerText = "Active";
+                memoryStatus.className = "px-3 py-1 rounded-full bg-green-500 text-white text-xs font-bold";
+                memoryDisplay.classList.add("text-green-400");
+                memoryDisplay.classList.remove("text-white");
+            } else {
+                memoryStatus.innerText = "Empty";
+                memoryStatus.className = "px-3 py-1 rounded-full bg-slate-700 text-slate-400 text-xs font-bold";
+                memoryDisplay.classList.add("text-white");
+                memoryDisplay.classList.remove("text-green-400");
+            }
         }
 
         function calculate() {
             try {
                 const result = new Function('return ' + currentInput)();
                 const finalResult = parseFloat(result.toFixed(8));
+
+                addToHistory(currentInput.replace(/\*/g, '×').replace(/\//g, '÷'), finalResult);
 
                 currentInput = finalResult.toString();
                 displayHistory.innerText = "Hasil Akhir"; 
@@ -118,6 +136,38 @@
                 currentInput = '0';
                 updateScreen();
             }
+        }
+
+        function addToHistory(equation, result) {
+            history.push({ equation, result });
+            if (history.length > 5) history.shift();
+            renderHistory();
+        }
+
+        function renderHistory() {
+            historyList.innerHTML = '';
+            if (history.length === 0) {
+                historyList.innerHTML = '<div class="text-center text-slate-400 text-sm mt-10 italic">No history data</div>';
+                return;
+            }
+            history.slice().reverse().forEach(item => {
+                const div = document.createElement('div');
+                div.className = "bg-white p-3 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer flex justify-between items-center group";
+                div.innerHTML = `
+                    <span class="text-xs text-slate-500 font-mono group-hover:text-blue-500 truncate w-24">${item.equation}</span>
+                    <span class="text-lg font-bold text-slate-800">${item.result}</span>
+                `;
+                div.onclick = () => {
+                    if (currentInput === '0' || resultDisplayed) {
+                        currentInput = item.result.toString();
+                    } else {
+                        currentInput += item.result.toString();
+                    }
+                    resultDisplayed = false;
+                    updateScreen();
+                };
+                historyList.appendChild(div);
+            });
         }
 
         function handleInput(type, value) {
@@ -149,8 +199,32 @@
                 }
                 if (value === '=') calculate();
             }
-            
+            else if (type === 'memory') {
+                handleMemory(value); 
+            }
             updateScreen();
+        }
+
+        function handleMemory(action) {
+            let val = 0;
+            try { val = new Function('return ' + currentInput)(); } catch { val = 0; }
+
+            switch(action) {
+                case 'M+': memoryValue += val; break;
+                case 'M-': memoryValue -= val; break;
+                case 'MR': 
+                    if (currentInput === '0' || resultDisplayed) {
+                        currentInput = memoryValue.toString();
+                        resultDisplayed = false;
+                    } else {
+                        const lastChar = currentInput.slice(-1);
+                        if (['+', '-', '*', '/'].includes(lastChar)) currentInput += memoryValue.toString();
+                        else currentInput = memoryValue.toString();
+                    }
+                    break;
+                case 'MC': memoryValue = 0; break;
+            }
+            updateScreen(); 
         }
 
         document.querySelector('.grid').addEventListener('click', (e) => {
@@ -158,7 +232,13 @@
             if (!btn) return;
             const type = btn.dataset.type;
             const value = btn.dataset.value;
+            if (btn.innerText === 'Clear Mem') { handleMemory('MC'); return; }
             if (type && value) handleInput(type, value);
+        });
+
+        document.getElementById('clear-history-btn').addEventListener('click', () => {
+            history = [];
+            renderHistory();
         });
 
         document.addEventListener('keydown', (e) => {
