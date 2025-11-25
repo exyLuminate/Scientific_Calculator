@@ -90,10 +90,10 @@
     </div>
 
     <script>
-        let currentInput = '0';
-        let history = []; 
-        let resultDisplayed = false;
-        let memoryValue = 0; 
+        let currentInput = '0';      
+        let history = [];            
+        let resultDisplayed = false; 
+        let memoryValue = 0;
 
         const displayCurrent = document.getElementById('display-current');
         const displayHistory = document.getElementById('display-history');
@@ -102,11 +102,23 @@
         const memoryDisplay = document.getElementById('memory-display');
         const memoryStatus = document.getElementById('memory-status');
 
+        function formatRibuan(text) {
+            if (!text) return '';
+            return text.toString().replace(/(\d+)(\.\d+)?/g, (match, integerPart, decimalPart) => {
+                let formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                return formattedInteger + (decimalPart ? decimalPart : '');
+            });
+        }
+
         function updateScreen() {
-            let rawDisplay = currentInput.replace(/\*/g, '×').replace(/\//g, '÷');
-            displayCurrent.innerText = rawDisplay; 
+            let rawDisplay = currentInput
+                .replace(/\*/g, '×')
+                .replace(/\//g, '÷');
             
-            memoryDisplay.innerText = memoryValue;
+            displayCurrent.innerText = formatRibuan(rawDisplay);
+            
+            memoryDisplay.innerText = formatRibuan(memoryValue);
+            
             if (memoryValue !== 0) {
                 memoryStatus.innerText = "Active";
                 memoryStatus.className = "px-3 py-1 rounded-full bg-green-500 text-white text-xs font-bold";
@@ -123,6 +135,14 @@
         function calculate() {
             try {
                 const result = new Function('return ' + currentInput)();
+                
+                if (!isFinite(result) || isNaN(result)) {
+                    alert("Error: Tidak bisa membagi dengan nol!"); 
+                    currentInput = '0';
+                    updateScreen();
+                    return;
+                }
+
                 const finalResult = parseFloat(result.toFixed(8));
 
                 addToHistory(currentInput.replace(/\*/g, '×').replace(/\//g, '÷'), finalResult);
@@ -131,6 +151,7 @@
                 displayHistory.innerText = "Hasil Akhir"; 
                 resultDisplayed = true;
                 updateScreen();
+
             } catch (e) {
                 alert("Format rumus salah!");
                 currentInput = '0';
@@ -154,8 +175,8 @@
                 const div = document.createElement('div');
                 div.className = "bg-white p-3 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer flex justify-between items-center group";
                 div.innerHTML = `
-                    <span class="text-xs text-slate-500 font-mono group-hover:text-blue-500 truncate w-24">${item.equation}</span>
-                    <span class="text-lg font-bold text-slate-800">${item.result}</span>
+                    <span class="text-xs text-slate-500 font-mono group-hover:text-blue-500 truncate w-24">${formatRibuan(item.equation)}</span>
+                    <span class="text-lg font-bold text-slate-800">${formatRibuan(item.result)}</span>
                 `;
                 div.onclick = () => {
                     if (currentInput === '0' || resultDisplayed) {
@@ -200,14 +221,19 @@
                 if (value === '=') calculate();
             }
             else if (type === 'memory') {
-                handleMemory(value); 
+                handleMemory(value);
             }
+            
             updateScreen();
         }
 
         function handleMemory(action) {
             let val = 0;
-            try { val = new Function('return ' + currentInput)(); } catch { val = 0; }
+            try {
+                val = new Function('return ' + currentInput)();
+            } catch {
+                val = 0;
+            }
 
             switch(action) {
                 case 'M+': memoryValue += val; break;
@@ -218,8 +244,11 @@
                         resultDisplayed = false;
                     } else {
                         const lastChar = currentInput.slice(-1);
-                        if (['+', '-', '*', '/'].includes(lastChar)) currentInput += memoryValue.toString();
-                        else currentInput = memoryValue.toString();
+                        if (['+', '-', '*', '/'].includes(lastChar)) {
+                             currentInput += memoryValue.toString();
+                        } else {
+                             currentInput = memoryValue.toString();
+                        }
                     }
                     break;
                 case 'MC': memoryValue = 0; break;
